@@ -41,6 +41,8 @@ export default function Home() {
     const [createLocation, setLocationCreate] = useState(null);
     const [createStart, setStartCreate] = useState(null);
     const [createEnd, setEndCreate] = useState(null);
+    const [displayEvent, setDisplayEvent] = useState(null);
+
 
 
     async function GetCalendarEvent() {
@@ -49,7 +51,7 @@ export default function Home() {
       let timemin = year+'-'+month+'-'+day+'T'+"00%3A01%3A00-07%3A00";
       console.log(timemax)
 
-      if (timemin !== temp_timemin) {
+      // if (timemin !== temp_timemin) {
         start_event = [];
         end_event= []
         title_event = []
@@ -83,8 +85,12 @@ export default function Home() {
       list_event_id[i] = content.items[i].id
     }
     }
-  }
+    console.log("starteventlength ===="+ start_event.length)
   pushDivInList()
+  if (response.status === 200)
+    setDisplayEvent(true)
+
+  // }
       // displayCalendarEvent();
     // console.log(start_event)
     
@@ -159,6 +165,7 @@ export default function Home() {
         const currentDate = selectedDate || date;
         setShow(Platform.OS === 'ios');
         setDate(currentDate);
+        setDisplayEvent(false)
 
         let tempDate = new Date(currentDate);
         if ((tempDate.getMonth()+1) < 10) {
@@ -172,6 +179,12 @@ export default function Home() {
         year = tempDate.getFullYear();
         let fDate = day + '/' +month + '/' + tempDate.getFullYear();
         setText(fDate)
+        if (text !== last_text) {
+          console.log("jrenrreeeee laaa")
+          // list_div_event = [];
+          GetCalendarEvent();
+          setLastText(text);
+        }
     }
 
     const showMode = (currentMode) => {
@@ -250,7 +263,6 @@ export default function Home() {
       if (addnodeIsPressed === true) {
         PushNewDivInList()
       }
-      displayCalendarEvent()
     }
 
     async function ModifyEvent(index) {
@@ -294,6 +306,8 @@ export default function Home() {
     }
 
     function displayCalendarEvent() {
+      //ifffffff
+      if(displayEvent === true) {
       console.log(list_div_event.length)
        return (
        <View style={styles.DivToShowAllEvent}>
@@ -303,15 +317,10 @@ export default function Home() {
        </ScrollView>
        </View>
        );
+      }
     }
 
      function display_other_node() {
-      if (text !== last_text) {
-        // list_div_event = [];
-        GetCalendarEvent();
-        setLastText(text);
-      }
-      if (isPressed===true) {
       return(<>
       <View style={styles.DivShowEvent}>
       {displayCalendarEvent()}
@@ -324,7 +333,6 @@ export default function Home() {
     </>
     </>
     );
-      }
     }
 
     function button_getdata() {
@@ -350,12 +358,11 @@ export default function Home() {
         <Button title="Choose date" onPress={() => showMode('date')}/>
       </View>
       {show && (
-        <DateTimePicker testID="dateTimePicker" value={date} mode={mode} is24Hour={true} display="default" onChange={onChange}/>
+        <DateTimePicker testID="dateTimePicker" value={date} mode={mode} is24Hour={true} display="default"  onChange={onChange}/>
       )}
       {button_getdata()}
     </View>
     {display_other_node()}
-
     </ImageBackground>
     </ScrollView>
     </>);
