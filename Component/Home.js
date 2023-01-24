@@ -1,8 +1,16 @@
 import React ,{ useState } from "react";
-import { Text, View, StyleSheet, ImageBackground, ScrollView, Platform, Button, TouchableOpacity, TextInput, ToastAndroid } from "react-native";
+import { Text, View, StyleSheet, ImageBackground, ScrollView, Platform, Button, Modal, TouchableOpacity, TextInput, ToastAndroid } from "react-native";
 import DateTimePicker from '@react-native-community/datetimepicker';
  import { user_info } from "./Profil";
  import { google_access_token } from "./Profil";
+ import CreateEventPage from "./CreateEvent";
+ import {
+  Menu,
+  MenuProvider,
+  MenuOptions,
+  MenuOption,
+  MenuTrigger,
+ } from "react-native-popup-menu";
 
 let temp_timemin = "r";
 let sizediv = 0;
@@ -21,6 +29,10 @@ let list_event_id = [];
 ///////////////
 let list_div_event =[];
 let list_to_stock_modify_element=[]
+let modifyTitle = null
+let modifyLocation= null
+let modifyEnd= null
+let modifyStart= null
 
 export default function Home() {
   
@@ -31,10 +43,6 @@ export default function Home() {
     const [show, setShow] = useState(false);
     const [text, setText] = useState(null);
     const [last_text, setLastText] = useState(null);
-    const [modifyTitle, setTitleModify] = useState(null);
-    const [modifyStart, setStartModify] = useState(null);
-    const [modifyEnd, setEndModify] = useState(null);
-    const [modifyLocation, setLocationModify] = useState(null);
     const [isPressed, setIspressed] = useState(false);
     const [addnodeIsPressed, SetAddNode] = useState(false);
     const [createTitle, setTitleCreate] = useState(null);
@@ -42,6 +50,12 @@ export default function Home() {
     const [createStart, setStartCreate] = useState(null);
     const [createEnd, setEndCreate] = useState(null);
     const [displayEvent, setDisplayEvent] = useState(null);
+  const [locationPopup, setLocationPopup] = useState(null);
+  const [popupdisplay, setPopupdisplay] = useState(null);
+  const [ndatemodify, setndate] = useState(new Date());
+  const [bdatemodify, setbdate] = useState(new Date());
+
+
 
 
 
@@ -49,7 +63,7 @@ export default function Home() {
       let email = user_info.email.replace("@", "%40");
       let timemax = year+'-'+month+'-'+day+'T'+"23%3A59%3A00-07%3A00";
       let timemin = year+'-'+month+'-'+day+'T'+"00%3A01%3A00-07%3A00";
-      console.log(timemax)
+
 
       // if (timemin !== temp_timemin) {
         start_event = [];
@@ -66,7 +80,6 @@ export default function Home() {
           Accept: "application/json",
         },
       });
-      console.log(response.status)
       let content = await response.json();
       //  console.log(content.items)
       if (content.items.length === 0) {
@@ -85,7 +98,7 @@ export default function Home() {
       list_event_id[i] = content.items[i].id
     }
     }
-    console.log("starteventlength ===="+ start_event.length)
+
   pushDivInList()
   if (response.status === 200)
     setDisplayEvent(true)
@@ -123,7 +136,7 @@ export default function Home() {
         new_minute = '0'+tempdate.getMinutes()
       }
       else new_minute = tempdate.getMinutes();
-      mydateend= new_year+'-'+new_month+'-'+new_day+'T'+new_hours+":"+ new_minute +":00+01:00";
+      mydateend= new_year+'-'+new_month+'-'+new_day+'T'+new_hours+":"+ new_minute +":00-07:00";
       setEndCreate(mydateend)
       // console.log("mydataend===="+mydateend)
     }
@@ -154,15 +167,80 @@ export default function Home() {
         new_minute = '0'+tempdate.getMinutes()
       }
       else new_minute = tempdate.getMinutes();
-      mydatebegin= new_year+'-'+new_month+'-'+new_day+'T'+new_hours+":"+ new_minute +":00+01:00";
+      mydatebegin= new_year+'-'+new_month+'-'+new_day+'T'+new_hours+":"+ new_minute +":00-07:00";
       setStartCreate(mydatebegin)
       // mydatebegin+='T'+"23%3A59%3A00-07%3A00";
       // console.log("mydatabegin===="+mydatebegin)
     }
 
+    function changeModifyDateBegin (selecteddate) {
+      const newdate = selecteddate;
+      let new_month;
+      let new_day;
+      let new_year;
+      let new_minute
+      let new_hours
+      setbdate(newdate)
+      let tempdate = new Date(newdate);
+      if ((tempdate.getMonth()+1) < 10) {
+        new_month = '0'+(tempdate.getMonth()+1);
+      }
+      else new_month = (tempdate.getMonth()+1);
+      if (tempdate.getDate() < 10) {
+        new_day = '0'+tempdate.getDate();
+      }
+      else new_day = tempdate.getDate();
+      new_year = tempdate.getFullYear();
+      if (tempdate.getHours() < 10) {
+        new_hours = '0'+tempdate.getHours()
+      }
+      else new_hours = tempdate.getHours();
+      if (tempdate.getMinutes()<10) {
+        new_minute = '0'+tempdate.getMinutes()
+      }
+      else new_minute = tempdate.getMinutes();
+  let result = new_year+' - '+new_month+' - '+new_day+' | '+new_hours+":"+ new_minute;
+      return (result)
+}
+
+function changeModifyDateEnd (selecteddate) {
+  const newdate = selecteddate;
+  let new_month;
+  let new_day;
+  let new_year;
+  let new_minute
+  let new_hours
+  setndate(newdate)
+  let tempdate = new Date(newdate);
+  if ((tempdate.getMonth()+1) < 10) {
+    new_month = '0'+(tempdate.getMonth()+1);
+  }
+  else new_month = (tempdate.getMonth()+1);
+  if (tempdate.getDate() < 10) {
+    new_day = '0'+tempdate.getDate();
+  }
+  else new_day = tempdate.getDate();
+  new_year = tempdate.getFullYear();
+  if (tempdate.getHours() < 10) {
+    new_hours = '0'+tempdate.getHours()
+  }
+  else new_hours = tempdate.getHours();
+  if (tempdate.getMinutes()<10) {
+    new_minute = '0'+tempdate.getMinutes()
+  }
+  else new_minute = tempdate.getMinutes();
+  let result = new_year+' - '+new_month+' - '+new_day+' | '+new_hours+":"+ new_minute;
+  let end_request_format = new_year+'-'+new_month+'-'+new_day+'T'+new_hours+":"+ new_minute +":00-07:00";
+  return(result)
+}
+
     const onChange = (event, selectedDate) => {
       
         const currentDate = selectedDate || date;
+        setbdate(currentDate)
+        setndate(currentDate)
+        setdate(currentDate)
+        setbeginDate(currentDate)
         setShow(Platform.OS === 'ios');
         setDate(currentDate);
         setDisplayEvent(false)
@@ -180,7 +258,6 @@ export default function Home() {
         let fDate = day + '/' +month + '/' + tempDate.getFullYear();
         setText(fDate)
         if (text !== last_text) {
-          console.log("jrenrreeeee laaa")
           // list_div_event = [];
           GetCalendarEvent();
           setLastText(text);
@@ -198,25 +275,7 @@ export default function Home() {
        return("date")
     }
 
-    function PushNewDivInList() {
-      list_div_event.push(
-        <View title="BUTTON" key={start_event.length} style={styles.DivToShowSingleEvent}>
-        {/* <Button title="Modify" onPress={()=>ModifyEvent(i)}/> */}
-        <DateTimePicker  mode={choose_mode_to_display_datetimepicker()} value={bdate} onChange={changeDateNodeBegin} style={styles.DivForEachData}/>
-        <DateTimePicker  mode={choose_mode_to_display_datetimepicker()} value={ndate} onChange={changeDateNodeEnd} style={styles.DivForEachData}/>
-        {/* <TextInput onChangeText={text=> setEndModify(text)} style={styles.DivForEachData}></TextInput> */}
-        <TextInput onChangeText={text=> setLocationCreate(text)} style={styles.DivForEachData}></TextInput>
-        <TextInput  onChangeText={text=> setTitleCreate(text)} style={styles.DivForEachData}></TextInput>
-        <Button title="Create" onPress={()=>CreateNewEvent()}/>
-      </View>
-      )
-    }
-
     async function CreateNewEvent() {
-      console.log(createEnd)
-      console.log(createStart)
-      console.log(createLocation)
-      console.log(createTitle)
       let email = user_info.email.replace("@", "%40");
       let response = await fetch("https://www.googleapis.com/calendar/v3/calendars/"+email+"/events", {
         method: 'POST',
@@ -238,21 +297,51 @@ export default function Home() {
         })
       })
       if (response.status === 200) {
-        console.log("requete okkkkk200000")
       }
       let content = await response.json();
       console.log(content)
     }// at the end of the function dont forget : mettre variable usestateCreate a null, vider list_div_event and recall getCalendar event
 
+    function ConvertIntoRequestFormatBegin(text) {
+      console.log("textbase==="+text)
+      let result = text.replace(/\s/g, '')
+      result = result.replace("|", "T")
+      result+=":00-07:00";
+      console.log("result ===="+result)
+      modifyStart = result
+    }
+
+    function ConvertIntoRequestFormatEnd(text) {
+      console.log("textbase==="+text)
+      let result = text.replace(/\s/g, '')
+      result = result.replace("|", "T")
+      result+=":00-07:00";
+      console.log("result ===="+result)
+      modifyEnd = result
+    }
+
+    function setTitleModify(text)
+    {
+      modifyTitle = text
+    }
+
+    function setLocationModify(text){
+        modifyLocation = text
+    }
+
+
     function pushDivInList() {
       list_div_event = [];
       list_to_stock_modify_element= [];
       for (let i = 0; i < start_event.length; i++) {
+        let end = changeModifyDateEnd(end_event[i])
+        let begin = changeModifyDateBegin(start_event[i])
         list_div_event.push(
           <View title="BUTTON" key={i} style={styles.DivToShowSingleEvent}>
             {/* <Button title="Modify" onPress={()=>ModifyEvent(i)}/> */}
-            <TextInput onChangeText={text=> setStartModify(text)} style={styles.DivForEachData}>{start_event[i]}</TextInput>
-            <TextInput onChangeText={text=> setEndModify(text)} style={styles.DivForEachData}>{end_event[i]}</TextInput>
+            <TextInput onChangeText={text=> ConvertIntoRequestFormatBegin(text)} style={styles.DivForEachData}>{begin}</TextInput>
+            {/* <DateTimePicker mode={choose_mode_to_display_datetimepicker()} value={ndatemodify} onChange={changeModifyDateEnd} style={styles.DivForEachData}>{end_event[i]}</DateTimePicker> */}
+            <TextInput onChangeText={text=> ConvertIntoRequestFormatEnd(text)} style={styles.DivForEachData}>{end}</TextInput>
             <TextInput onChangeText={text=> setLocationModify(text)} style={styles.DivForEachData}>{location_event[i]}</TextInput>
             <TextInput  onChangeText={text=> setTitleModify(text)} style={styles.DivForEachData}>{title_event[i]}</TextInput>
             <Button title="Modify" onPress={()=>ModifyEvent(i)}/>
@@ -260,15 +349,12 @@ export default function Home() {
         )
         sizediv+=80;
       }
-      if (addnodeIsPressed === true) {
-        PushNewDivInList()
-      }
     }
 
     async function ModifyEvent(index) {
-      // console.log(modifyTitle)
+      console.log("titlllle==" + modifyTitle)
       // console.log("compar toooo  " + title_event[0])
-      if (modifyTitle !== title_event[index] && modifyTitle!==null) {
+      if (modifyTitle !== title_event[index] && modifyTitle!=="") {
         title_event[index] = modifyTitle;
       }
       if (modifyLocation !== location_event[index] && modifyLocation !== null) {
@@ -280,6 +366,11 @@ export default function Home() {
       if (modifyEnd !== end_event[index] && modifyEnd !== null) {
         end_event[index] = modifyEnd
       }
+      console.log("end=="+end_event )
+      console.log("start==="+start_event)
+      console.log("location==="+location_event)
+      console.log("title==="+title_event)
+      
       let email = user_info.email.replace("@", "%40");
       // console.log("email ===" +email)
       let response = await fetch("https://www.googleapis.com/calendar/v3/calendars/"+email+"/events/"+list_event_id[index],{
@@ -303,15 +394,37 @@ export default function Home() {
       });
       let content = await response.json();
       console.log("status code of modify==="+response.status)
+
+      // if (response.status===200)
+        // GetCalendarEvent()
+    }
+
+    function DisplayPopup() 
+    {
+      if (popupdisplay === true) {
+          return(<View style={styles.popupbackground}>
+            <Button title="Quit" onPress={()=>setPopupdisplay(false)}/>
+            <View title="BUTTON" key={start_event.length} style={styles.DivToShowSingleEvent}>
+        {/* <Button title="Modify" onPress={()=>ModifyEvent(i)}/> */}
+        <DateTimePicker  mode={choose_mode_to_display_datetimepicker()} value={bdate} onChange={changeDateNodeBegin} style={styles.DivForEachData}/>
+        <DateTimePicker  mode={choose_mode_to_display_datetimepicker()} value={ndate} onChange={changeDateNodeEnd} style={styles.DivForEachData}/>
+        {/* <TextInput onChangeText={text=> setEndModify(text)} style={styles.DivForEachData}></TextInput> */}
+        <TextInput onChangeText={text=> setLocationCreate(text)} style={styles.DivForEachData}></TextInput>
+        <TextInput  onChangeText={text=> setTitleCreate(text)} style={styles.DivForEachData}></TextInput>
+        <Button title="Create" onPress={()=>CreateNewEvent()}/>
+      </View>
+          </View>)
+          // setPopupdisplay(false)
+
+      }
     }
 
     function displayCalendarEvent() {
       //ifffffff
       if(displayEvent === true) {
-      console.log(list_div_event.length)
        return (
        <View style={styles.DivToShowAllEvent}>
-       <Button title="addnode" onPress={()=> SetAddNode(true)} style={styles.SetTextButton}/>
+        {/* <Settings></Settings> */}
         <ScrollView>
        {list_div_event}
        </ScrollView>
@@ -323,14 +436,10 @@ export default function Home() {
      function display_other_node() {
       return(<>
       <View style={styles.DivShowEvent}>
+        {DisplayPopup()}
+       <Button title="POPUP" onPress={()=> setPopupdisplay(true)} style={styles.SetTextButton}/>
       {displayCalendarEvent()}
-       <Button title="addnode" onPress={()=> SetAddNode(true)} style={styles.SetTextButton}/>
     </View>
-    <View style={styles.DivForButtonGetData}>
-      <Button title="addnode" style={styles.SetTextButton}/>
-    </View>
-    <>
-    </>
     </>
     );
     }
@@ -363,8 +472,10 @@ export default function Home() {
       {button_getdata()}
     </View>
     {display_other_node()}
+        
     </ImageBackground>
     </ScrollView>
+    {DisplayPopup()}
     </>);
   }
 //   pouvoir partager son calendar.
@@ -373,6 +484,24 @@ export default function Home() {
 // et enfin generer itinerair jour selectionner.
 
   const styles = StyleSheet.create({
+    popupbackground:{
+      backgroundColor:'white',
+      justifyContent: "center",
+      alignItems: "center",
+      width:'100%',
+      height:'100%'
+    },
+    popup: {
+      // flex: 1,
+       backgroundColor: "rgba(200, 200, 200, 0.7)",
+       borderRadius: 25,
+      justifyContent: "flex-start",
+      alignItems: "center",
+      paddingTop: 15,
+      // flexDirection: "column",
+        height:"50%",
+       width:"70%"
+    },
     background: {
       flex: 1,
       alignItems: 'center',
