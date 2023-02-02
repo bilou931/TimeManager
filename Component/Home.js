@@ -1,19 +1,9 @@
 import React ,{ useState } from "react";
-import { Text, View, StyleSheet, ImageBackground, ScrollView, Platform, Button, Modal, TouchableOpacity, TextInput, ToastAndroid } from "react-native";
+import { Text, View, StyleSheet, ImageBackground, ScrollView, Platform, Button, Modal, TouchableOpacity, TextInput, ToastAndroid, StatusBar } from "react-native";
 import DateTimePicker from '@react-native-community/datetimepicker';
- import { user_info } from "./Profil";
- import { google_access_token } from "./Profil";
- import CreateEventPage from "./CreateEvent";
- import {
-  Menu,
-  MenuProvider,
-  MenuOptions,
-  MenuOption,
-  MenuTrigger,
- } from "react-native-popup-menu";
+import { user_info } from "./Profil";
+import { google_access_token } from "./Profil";
 
-let temp_timemin = "r";
-let sizediv = 0;
 
  let month;
  let day;
@@ -21,14 +11,14 @@ let mydatebegin;
 let mydateend;
  let year = null;
  // variable to stock getEventCalendar:
-export let start_event= [];
+let start_event= [];
 let end_event= [];
 let title_event= [];
 let location_event= [];
 let list_event_id = [];
+let sizediv;
 ///////////////
 let list_div_event =[];
-let list_to_stock_modify_element=[]
 let modifyTitle = null
 let modifyLocation= null
 let modifyEnd= null
@@ -72,7 +62,6 @@ export default function Home() {
         location_event = []
         list_event_id = []
         setIspressed(true)
-        temp_timemin = timemin;
       let response = await fetch("https://www.googleapis.com/calendar/v3/calendars/"+email+"/events?timeMax="+timemax+"&timeMin="+timemin, 
       {
         headers: {
@@ -100,6 +89,7 @@ export default function Home() {
     }
 
   pushDivInList()
+  console.log(response.status)
   if (response.status === 200)
     setDisplayEvent(true)
 
@@ -136,7 +126,7 @@ export default function Home() {
         new_minute = '0'+tempdate.getMinutes()
       }
       else new_minute = tempdate.getMinutes();
-      mydateend= new_year+'-'+new_month+'-'+new_day+'T'+new_hours+":"+ new_minute +":00-07:00";
+      mydateend= new_year+'-'+new_month+'-'+new_day+'T'+new_hours+":"+ new_minute +":00+01:00";
       setEndCreate(mydateend)
       // console.log("mydataend===="+mydateend)
     }
@@ -167,7 +157,7 @@ export default function Home() {
         new_minute = '0'+tempdate.getMinutes()
       }
       else new_minute = tempdate.getMinutes();
-      mydatebegin= new_year+'-'+new_month+'-'+new_day+'T'+new_hours+":"+ new_minute +":00-07:00";
+      mydatebegin= new_year+'-'+new_month+'-'+new_day+'T'+new_hours+":"+ new_minute +":00+01:00";
       setStartCreate(mydatebegin)
       // mydatebegin+='T'+"23%3A59%3A00-07%3A00";
       // console.log("mydatabegin===="+mydatebegin)
@@ -230,7 +220,7 @@ function changeModifyDateEnd (selecteddate) {
   }
   else new_minute = tempdate.getMinutes();
   let result = new_year+' - '+new_month+' - '+new_day+' | '+new_hours+":"+ new_minute;
-  let end_request_format = new_year+'-'+new_month+'-'+new_day+'T'+new_hours+":"+ new_minute +":00-07:00";
+  let end_request_format = new_year+'-'+new_month+'-'+new_day+'T'+new_hours+":"+ new_minute +":00-01:00";
   return(result)
 }
 
@@ -276,6 +266,11 @@ function changeModifyDateEnd (selecteddate) {
     }
 
     async function CreateNewEvent() {
+      console.log("create title==="+createTitle)
+      console.log("create location==="+createLocation)
+      console.log("create start==="+createStart)
+      console.log("create end==="+createEnd)
+
       let email = user_info.email.replace("@", "%40");
       let response = await fetch("https://www.googleapis.com/calendar/v3/calendars/"+email+"/events", {
         method: 'POST',
@@ -297,53 +292,67 @@ function changeModifyDateEnd (selecteddate) {
         })
       })
       if (response.status === 200) {
+        setEndCreate(null)
+        setStartCreate(null)
+        setTitleCreate(null)
+        setLocationCreate(null)
       }
+      if (response.status ===400) {
+        alert("Bad request. (Start or end times) missing or bad format")
+      }
+      if (response.status === 401) {
+        alert("Bad credentials: please reconnect")
+      }
+      if (response.status ===403) {
+        alert("ERROR:\nRate request exceeded\nOr Calendar usage limits exceeded")
+      }
+      console.log(response.status)
+
       let content = await response.json();
       console.log(content)
     }// at the end of the function dont forget : mettre variable usestateCreate a null, vider list_div_event and recall getCalendar event
 
-    function ConvertIntoRequestFormatBegin(text) {
+    function ConvertIntoRequestFormatBegin(text, i) {
       console.log("textbase==="+text)
       let result = text.replace(/\s/g, '')
       result = result.replace("|", "T")
-      result+=":00-07:00";
+      result+=":00+01:00";
       console.log("result ===="+result)
-      modifyStart = result
+      start_event[i] = result
     }
 
-    function ConvertIntoRequestFormatEnd(text) {
+    function ConvertIntoRequestFormatEnd(text, i) {
       console.log("textbase==="+text)
       let result = text.replace(/\s/g, '')
       result = result.replace("|", "T")
-      result+=":00-07:00";
+      result+=":00+01:00";
       console.log("result ===="+result)
-      modifyEnd = result
+      end_event[i] = result
     }
 
-    function setTitleModify(text)
+    function setTitleModify(text, i)
     {
-      modifyTitle = text
+      title_event[i] = text
     }
 
-    function setLocationModify(text){
-        modifyLocation = text
+    function setLocationModify(text, i){
+        location_event[i] = text
     }
 
 
     function pushDivInList() {
       list_div_event = [];
-      list_to_stock_modify_element= [];
       for (let i = 0; i < start_event.length; i++) {
         let end = changeModifyDateEnd(end_event[i])
         let begin = changeModifyDateBegin(start_event[i])
         list_div_event.push(
           <View title="BUTTON" key={i} style={styles.DivToShowSingleEvent}>
             {/* <Button title="Modify" onPress={()=>ModifyEvent(i)}/> */}
-            <TextInput onChangeText={text=> ConvertIntoRequestFormatBegin(text)} style={styles.DivForEachData}>{begin}</TextInput>
+            <TextInput onChangeText={text=> ConvertIntoRequestFormatBegin(text, i)} style={styles.DivForEachData}>{begin}</TextInput>
             {/* <DateTimePicker mode={choose_mode_to_display_datetimepicker()} value={ndatemodify} onChange={changeModifyDateEnd} style={styles.DivForEachData}>{end_event[i]}</DateTimePicker> */}
-            <TextInput onChangeText={text=> ConvertIntoRequestFormatEnd(text)} style={styles.DivForEachData}>{end}</TextInput>
-            <TextInput onChangeText={text=> setLocationModify(text)} style={styles.DivForEachData}>{location_event[i]}</TextInput>
-            <TextInput  onChangeText={text=> setTitleModify(text)} style={styles.DivForEachData}>{title_event[i]}</TextInput>
+            <TextInput onChangeText={text=> ConvertIntoRequestFormatEnd(text, i)} style={styles.DivForEachData}>{end}</TextInput>
+            <TextInput onChangeText={text=> setLocationModify(text, i)} style={styles.DivForEachData}>{location_event[i]}</TextInput>
+            <TextInput  onChangeText={text=> setTitleModify(text, i)} style={styles.DivForEachData}>{title_event[i]}</TextInput>
             <Button title="Modify" onPress={()=>ModifyEvent(i)}/>
           </View>
         )
@@ -352,20 +361,20 @@ function changeModifyDateEnd (selecteddate) {
     }
 
     async function ModifyEvent(index) {
-      console.log("titlllle==" + modifyTitle)
+      // console.log("titlllle==" + modifyTitle)
       // console.log("compar toooo  " + title_event[0])
-      if (modifyTitle !== title_event[index] && modifyTitle!=="") {
-        title_event[index] = modifyTitle;
-      }
-      if (modifyLocation !== location_event[index] && modifyLocation !== null) {
-        location_event[index] = modifyLocation;
-      }
-      if (modifyStart !== start_event[index] && modifyStart !== null) {
-        start_event[index] = modifyStart;
-      }
-      if (modifyEnd !== end_event[index] && modifyEnd !== null) {
-        end_event[index] = modifyEnd
-      }
+      // if (modifyTitle !== title_event[index] && modifyTitle!=="") {
+        // title_event[index] = modifyTitle;
+      // }
+      // if (modifyLocation !== location_event[index] && modifyLocation !== null) {
+        // location_event[index] = modifyLocation;
+      // }
+      // if (modifyStart !== start_event[index] && modifyStart !== null) {
+        // start_event[index] = modifyStart;
+      // }
+      // if (modifyEnd !== end_event[index] && modifyEnd !== null) {
+        // end_event[index] = modifyEnd
+      // }
       console.log("end=="+end_event )
       console.log("start==="+start_event)
       console.log("location==="+location_event)
@@ -399,7 +408,7 @@ function changeModifyDateEnd (selecteddate) {
         // GetCalendarEvent()
     }
 
-    function DisplayPopup() 
+    function DisplayPopup()
     {
       if (popupdisplay === true) {
           return(<View style={styles.popupbackground}>
@@ -414,21 +423,17 @@ function changeModifyDateEnd (selecteddate) {
         <Button title="Create" onPress={()=>CreateNewEvent()}/>
       </View>
           </View>)
-          // setPopupdisplay(false)
 
       }
     }
 
     function displayCalendarEvent() {
-      //ifffffff
       if(displayEvent === true) {
-       return (
-       <View style={styles.DivToShowAllEvent}>
-        {/* <Settings></Settings> */}
+       return (<>
         <ScrollView>
        {list_div_event}
        </ScrollView>
-       </View>
+       </>
        );
       }
     }
@@ -454,12 +459,11 @@ function changeModifyDateEnd (selecteddate) {
             );
         }
     }
-    // console.log(modifyLocation)
-    // console.log(modifyTitle)
 
     return (
         <>
     <ScrollView contentContainerStyle={{flexGrow:1}}>
+  <StatusBar hidden/>
     <ImageBackground source={require('../background.jpg')} style={styles.background}>
     <View style = {styles.backgroundDivDate}>
       {/* <Text>{text}</Text> */}
@@ -472,10 +476,11 @@ function changeModifyDateEnd (selecteddate) {
       {button_getdata()}
     </View>
     {display_other_node()}
-        
+    <Button title="butt"/>
     </ImageBackground>
     </ScrollView>
     {DisplayPopup()}
+    
     </>);
   }
 //   pouvoir partager son calendar.
@@ -485,7 +490,7 @@ function changeModifyDateEnd (selecteddate) {
 
   const styles = StyleSheet.create({
     popupbackground:{
-      backgroundColor:'white',
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
       justifyContent: "center",
       alignItems: "center",
       width:'100%',

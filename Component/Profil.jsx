@@ -13,7 +13,7 @@ export default function Profil() {
     androidClientId: "151462805855-ppsidiv6ojd54bifesr5bqa77udvcgct.apps.googleusercontent.com",
     iosClientId: "151462805855-oggtak1hudth6474k1258bs9e171prbl.apps.googleusercontent.com",
     expoClientId: "151462805855-qjoeaf2souf60dd6dcra638iokkp3atq.apps.googleusercontent.com",
-    scopes: ['openid','https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/calendar', 'https://www.googleapis.com/auth/calendar.events'],
+    scopes: ['openid','https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/calendar', 'https://www.googleapis.com/auth/calendar.events', 'https://www.googleapis.com/auth/tasks.readonly'],
   }, );
    React.useEffect(() => {
      if (response?.type === "success") {
@@ -37,12 +37,13 @@ export default function Profil() {
 
    const ShowUserInfo = () => {
     if (user) {
-      return (
+      return (<>
+        <Text style={{fontStyle:'italic',fontSize:55, fontWeight:'normal', marginBottom:20, color:'white'}}>Welcome</Text>
         <View style={{flex:1, alignItems:'center', justifyContent:'center'}}>
-         <Text style={{fontSize:35, fontWeight:'bold', marginBottom:20}}>Welcome</Text>
          <Image source={{uri:user.picture}} style={{width:100, height:100, borderRadius:50}}/>
          <Text style={{fontSize:20, fontWeight:'bold'}}>{user.name}</Text>
          </View>
+         </>
       )
     }
    }
@@ -51,14 +52,12 @@ export default function Profil() {
     <ImageBackground source={require('../background.jpg')} style={styles.background}>
       
       {/* <TopBar/> */}
+      <Text style={{fontSize:55, fontWeight:'normal', fontStyle:'italic',marginBottom:20, color:"white"}}>Welcome</Text>
       <View style={styles.container}>
-   <View style={styles.container}> 
         {ShowUserInfo()}
-       <Text>Welcome, {}</Text>
         <Button title={accessToken ? "Get user data":"Login"} onPress={accessToken ? getUserData : () => promptAsync({useProxy: true, showInRecents:true})} style={styles.googleSignInButton}/>
            <Text style={styles.googleSignInButtonText}>Sign in with Google</Text>
     </View>
-      </View>
       </ImageBackground>
     </>);
   }
