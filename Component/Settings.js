@@ -2,7 +2,7 @@
 
 
 import { user_info } from "./Profil";
-import { StatusBar, StyleSheet, Text, TextInput, View, ScrollView,ImageBackground, Platform, TouchableOpacity, Button } from "react-native";
+import { StatusBar, StyleSheet, Text, TextInput, View, ScrollView,ImageBackground, Platform, TouchableOpacity, Button, LogBox } from "react-native";
 import React,{useState} from "react";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {
@@ -30,25 +30,97 @@ let Arrival;
 let event_schedule;
 export let chosen_date = new Date().toJSON().slice(0,10)
 
+let valuemenurequest="Mode"
+let startadressrequest;
+let travelduration = []
+
+
+function diff_hours(dt2, dt1) 
+ {
+
+  var diff =(dt2.getHours() - dt1.getHours()) / 1000;
+  diff /= (60 * 60);
+  return Math.abs(Math.round(diff));
+  
+ }
+
+function convertToDateTimeForMapsRequest (selecteddate) {
+  const newdate = selecteddate;
+  let new_month;
+  let new_day;
+  let new_year;
+  let new_minute
+  let new_hours
+  let tempdate = new Date(newdate);
+  if ((tempdate.getMonth()+1) < 10) {
+    new_month = '0'+(tempdate.getMonth()+1);
+  }
+  else new_month = (tempdate.getMonth()+1);
+  if (tempdate.getDate() < 10) {
+    new_day = '0'+tempdate.getDate();
+  }
+  else new_day = tempdate.getDate();
+  new_year = tempdate.getFullYear();
+  if (tempdate.getHours() < 10) {
+    new_hours = '0'+tempdate.getHours()
+  }
+  else new_hours = tempdate.getHours();
+  if (tempdate.getMinutes()<10) {
+    new_minute = '0'+tempdate.getMinutes()
+  }
+  else new_minute = tempdate.getMinutes();
+  let mydatebegin= new_year+'/'+new_month+'/'+new_day+' '+new_hours+":"+ new_minute +":00";
+  return mydatebegin
+}
 
 export async function getGpsCoord(adresse){
   let response = await fetch("http://api.positionstack.com/v1/forward?access_key=ce0cabdffceba88f697570ca071956b7&query="+adresse)
   let content = await response.json()
-  return [content.data[0].latitude, content.data[0].longitude]
+  let result = content.data[0].latitude +","+ content.data[0].longitude
+  return result
+}
+
+export async function canInsertEvent() {
+  return true
 }
 
 export async function RequestMaps(i)
 {
-  getGpsCoord(startAdress)
-  getGpsCoord(location_event[i])
-  let response = await fetch("http://dev.virtualearth.net/REST/v1/Routes/"+valuemenu+"?"+"wayPoint.1="+startAdress+"&wayPoint.2="+location_event[i]+"&timeType=Arrival&dateTime="+start_event[i]+"&key=AnohBX4TT6Nd5E532VxJqbuBFoRsbmj9S-z_r_ZXZU7jxTa6GIoH9qD6eFsrqqOo",
+  let startingpoint = await getGpsCoord(startadressrequest)
+  let target_point = await getGpsCoord(location_event[i])
+  let arrival = convertToDateTimeForMapsRequest(start_event[i])
+  console.log(startadressrequest)
+  console.log(location_event[i])
+  console.log(startingpoint)
+  console.log(target_point)
+  console.log(valuemenurequest)
+  console.log(arrival)
+  console.log(start_event)
+  console.log(end_event)
+  console.log("-----------------------^\n\n")
+
+  let response = await fetch("http://dev.virtualearth.net/REST/v1/Routes/"+valuemenurequest+"?"+"wayPoint.1="+startingpoint+"&wayPoint.2="+target_point+"&timeType=Arrival&dateTime="+arrival+"&optimize=timeWithTraffic"+"&key=AnohBX4TT6Nd5E532VxJqbuBFoRsbmj9S-z_r_ZXZU7jxTa6GIoH9qD6eFsrqqOo",
   {headers:{Accept: "application/json"}})
+  let content = await response.json();
   console.log("request mapppssss"+response.status)
+  // console.log("content request"+content.resourceSets[0].resources[0].travelDurationTraffic.toString())
+  
 
   if (response.status===200) {
-    startAdress = location_event[i]
+    if (end_event[i] < start_event[i-1]) {
+      let dt2 = new Date(end_event[i])
+      let dt1 = new Date(start_event[i-1])
+      console.log((dt2.getHours()))
+      console.log((dt1.getHours()))
+      // console.log(diff_hours(new Date(end_event[i]), new Date(start_event[i-1])))
+      if (canInsertEvent() === true) {
+        // insert event
+      }
+    }
+    travelduration.push(content.resourceSets[0].resources[0].travelDurationTraffic.toString())
+    console.log(content.resourceSets[0].resources[0].routeLegs[0].startTime.toString())
+    startadressrequest = location_event[i]
   }
-  let content = await response.json();
 }
 
 
@@ -95,18 +167,24 @@ export async function getCalendarEvent() {
           location_event[i] = content.items[i].location
         }
       }
-      console.log("modulable event" +modulable_title_event)
-      console.log("important event" + title_event)
+      // console.log("modulable event" +modulable_title_event)
       /// boucle pour calculer toutt les trajet imposé.
       // boucle pour calculer le trou de chaque event
       //si possible caller un event en fonctiion du temps que ca dure.
-      getGpsCoord("13 avenue des oiseaux, 93150")
-      // for (var i = 0; i < start_event.length; i++) {
-      //  RequestMaps(i)
-      // }
+      for (var i = start_event.length-1; i>=0 ; i--) {
+        await RequestMaps(i)
+        }
       }
     }
 
+}
+
+function setValueMenuRequest(param) {
+  valuemenurequest = param
+}
+
+function setStartAdressForRequest(param) {
+startadressrequest = param
 }
 
 export default function Settings() {
@@ -167,6 +245,7 @@ export default function Settings() {
     <TouchableOpacity style={styles.DivForButtonGetData}>
   <MenuProvider style={styles.container}>
     <Menu onSelect={value=> setValue(value)}>
+      {setValueMenuRequest(valuemenu)}
       <MenuTrigger>
         <Text style={styles.SetTextButton}>{valuemenu}</Text>
       </MenuTrigger>
@@ -185,6 +264,7 @@ export default function Settings() {
   </MenuProvider>
   </TouchableOpacity>
   <TextInput onChangeText={text=>setStartingAdress(text)} style={styles.textinputadress}></TextInput>
+  {setStartAdressForRequest(startAdress)}
   <Text style={{fontStyle:'italic',
   textDecorationLine: "underline",
   fontWeight: 'bold',}}>Format: adress, zipcode.</Text>
