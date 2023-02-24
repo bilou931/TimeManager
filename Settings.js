@@ -2,7 +2,7 @@
 
 
 import { user_info } from "./Profil";
-import { StatusBar, StyleSheet, Text, TextInput, View, ScrollView, ImageBackground, Platform, TouchableOpacity, Button, LogBox } from "react-native";
+import { StatusBar, StyleSheet, Text, TextInput, View, Image, ScrollView, ImageBackground, Platform, TouchableOpacity, Button, LogBox } from "react-native";
 import React, { useState } from "react";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {
@@ -36,7 +36,7 @@ let startadressrequest;
 let travelduration = []
 let starting_time = ["2023-02-25T08:00:00+01:00"]
 let temp_path = []
-let bool_list = []
+let hours_display = []
 
 
 
@@ -115,6 +115,9 @@ export default function Settings() {
     let response = await fetch("http://dev.virtualearth.net/REST/v1/Routes/" + valuemenurequest + "?" + "wayPoint.1=" + start_coord + "&wayPoint.2=" + coord_insert_event + "&timeType=Arrival&dateTime=" + new_arrival + "&optimize=timeWithTraffic" + "&key=AnohBX4TT6Nd5E532VxJqbuBFoRsbmj9S-z_r_ZXZU7jxTa6GIoH9qD6eFsrqqOo",
       { headers: { Accept: "application/json" } })
     let content = await response.json()
+    if (content.resourceSets[0].resources[0] === undefined) {
+      alert("Api error:\nPlease retry")
+    }
     /////////////////// 2 variables: time in second from start to event, + time of the event
     let time_start_to_new_point = Number(content.resourceSets[0].resources[0].travelDurationTraffic.toString())
     let event_time_in_second = diff_hours(new Date(modulable_end_event[index_second]), new Date(modulable_start_event[index_second])) * 3600
@@ -134,6 +137,9 @@ export default function Settings() {
       let response2 = await fetch("http://dev.virtualearth.net/REST/v1/Routes/" + valuemenurequest + "?" + "wayPoint.1=" + new_depart + "&wayPoint.2=" + real_target + "&timeType=Arrival&dateTime=" + arrival_time + "&optimize=timeWithTraffic" + "&key=AnohBX4TT6Nd5E532VxJqbuBFoRsbmj9S-z_r_ZXZU7jxTa6GIoH9qD6eFsrqqOo",
         { headers: { Accept: "application/json" } })
       let ccontent = await response2.json()
+      if (ccontent.resourceSets[0].resources[0] === undefined) {
+        alert("Api error:\nPlease retry")
+      }
       // console.log(ccontent.resourceSets[0].resources[0])
       // console.log(ccontent.resourceSets[0].resources[0].routeLegs[0].actualEnd)
       console.log("BRRAKPOINT")
@@ -224,33 +230,43 @@ function substractHours(time, date) {
             console.log("insert elemrnt ==" + modulable_location_event[i])
             let time = secondToHoursAndMinutes(insert.startToP)
             let time_to_insert = substractHours(time, modulable_start_event[i])
-            temp_path.push(time_to_insert.h+ ":"+time_to_insert.m+ ":"+time_to_insert.s+ "->\n"+ modulable_location_event[i])
+            hours_display.push(time_to_insert.h+ ":"+time_to_insert.m+ ":"+time_to_insert.s)
+            temp_path.push(modulable_location_event[i]+"--->" + modulable_start_event[i])
             let time2 = secondToHoursAndMinutes(insert.pToRealP)
             console.log(time2)
             let time_insert_to_event = substractHours(time2,start_event[index])
-            temp_path.push(time_insert_to_event.h+":"+time_insert_to_event.m+":"+time_insert_to_event.s + "->\n"+location_event[index])
+            hours_display.push(time_insert_to_event.h+":"+time_insert_to_event.m+":"+time_insert_to_event.s)
+            temp_path.push(location_event[index]+"--->" + start_event[index])
             // insert event
           }
         }
         // travelduration.push(content.resourceSets[0].resources[0].travelDurationTraffic.toString())
         // console.log(content.resourceSets[0].resources[0].routeLegs[0].startTime.toString())
       }
-      console.log(bool_list)
-      if (bool_list[index] === false) {
-        let duration = Number(content.resourceSets[0].resources[0].travelDurationTraffic.toString())
-        //second /3600 to convert into hour
-        //end event - travel duration = temps au quel il faut partir
-      }
+      // console.log(bool_list)
+      // if (bool_list[index] === false) {
+        // let duration = Number(content.resourceSets[0].resources[0].travelDurationTraffic.toString())
+        // second /3600 to convert into hour
+        // end event - travel duration = temps au quel il faut partir
+      // }
       // console.log(location_event[index])
-    for (var i = 0; i < temp_path.length; i++) {
       
-    }
-      temp_path.push(location_event[index])
+      
       startadressrequest = location_event[index]
       //{#~#~~~~~~~~~~ CREATE LIST WITH START TIME AND PUT BY DEFAULT THE START DAY TO 8am
       ///// IN ORDER TO HAVE ENCADREMENT (START TIME< INSERT START< START EVENT)
       // let temp = new Date()
       starting_time.push(end_event[index]) //// dont forget to put 8am in datetime by default.
+      console.log("temp path =====  " + temp_path)
+      for (var j = 0; j < temp_path.length; j++) {
+        if (temp_path[j].includes(location_event[index]) === true) {
+          return
+        }
+      }
+      let time = secondToHoursAndMinutes(Number(content.resourceSets[0].resources[0].travelDurationTraffic.toString()))
+      let time_insert = substractHours(time, start_event[index])
+      hours_display.push(time_insert.h+":"+time_insert.m+":"+time_insert.s)
+      temp_path.push(location_event[index] +"--->" + start_event[index])
       console.log("temp path =====  " + temp_path)
       // console.log("starting time==="+starting_time)
     }
@@ -340,9 +356,31 @@ function substractHours(time, date) {
     console.log(temp_path.length)
     let temp = []
     for (var i = 0; i < temp_path.length; i++) {
-      temp.push(<View key={i} style={styles.divForResult}>
-        <Text key={i} style={styles.SetTextButton}>{temp_path[i]}</Text>
-      </View>)
+      if (i === 0) {
+        temp.push(<View key={i} style={styles.divForResult}>
+          {/* <Text key={i+1} style={styles.textResult}>Start Point</Text> */}
+          <Text key={i+2} style={styles.textResult}>{temp_path[i]}</Text>
+          <Image style = {{ width: 50, height: 50 }} source={require('../assets/arrow.png')}/>
+          <Text key={i+3} style={styles.setHoursResult}>{hours_display[i]}</Text>
+          <Image style = {{ width: 50, height: 50 }} source={require('../assets/arrow.png')}/>
+        </View>)
+      }
+      else if (i === temp_path.length - 1) {
+        temp.push(<View key={i} style={styles.divForResult}>
+          <Text key={i+1} style={styles.textResult}>{temp_path[i]}</Text>
+          {/* <Text key={i+2} style={styles.textResult}>End Point</Text> */}
+        </View>)
+      }
+      else {
+        temp.push(<View key={i} style={styles.divForResult}>
+          {/* <Text key={i+1} style={styles.textResult}>Middle Point</Text> */}
+          <Text key={i+2} style={styles.textResult}>{temp_path[i]}</Text>
+          <Image style = {{ width: 50, height: 50 }} source={require('../assets/arrow.png')}/>
+          <Text key={i+3} style={styles.setHoursResult}>{hours_display[i]}</Text>
+          <Image style = {{ width: 50, height: 50 }} source={require('../assets/arrow.png')}/>
+        </View>)
+      }
+      
     }
     setDisplay(temp)
   }
@@ -515,13 +553,34 @@ const styles = StyleSheet.create({
   divForResult: {
     // backgroundColor: 'grey',
     width: 300,
-    height: 120,
+    height: 320,
     borderRadius: 20,
     textAlign: 'center',
+    paddingTop:15,
+    justifyContent:"center",
+    alignItems:"center"
   },
   scroll: {
     width:"100%",
     height:"100%",
-
+  },
+  textResult: {
+    color:"grey",
+    fontSize: '20',
+    fontStyle: 'italic',
+    // fontFamily:"Lucida Console",
+    fontWeight: 'bold',
+    paddingBottom: 30,
+    paddingTop:10,
+  },
+  setHoursResult: {
+    color:"white",
+    fontSize: '20',
+    fontStyle: 'italic',
+    // fontFamily:"Lucida Console",
+    textDecorationLine: "underline",
+    fontWeight: 'bold',
+    paddingBottom: 30,
+    paddingTop:10,
   }
 });
