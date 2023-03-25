@@ -49,7 +49,7 @@ export default function Profil() {
    }
     return (
         <>
-    <ImageBackground source={require('../background.jpg')} style={styles.background}>
+    <ImageBackground source={require('../bluebg.jpeg')} style={styles.background}>
       
       {/* <TopBar/> */}
       <Text style={{fontSize:55, fontWeight:'normal', fontStyle:'italic',marginBottom:20, color:"white"}}>Welcome</Text>

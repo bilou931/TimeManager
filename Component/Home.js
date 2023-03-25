@@ -420,7 +420,7 @@ function changeModifyDateEnd (selecteddate) {
         {/* <TextInput onChangeText={text=> setEndModify(text)} style={styles.DivForEachData}></TextInput> */}
         <TextInput onChangeText={text=> setLocationCreate(text)} style={styles.DivForEachData}></TextInput>
         <TextInput  onChangeText={text=> setTitleCreate(text)} style={styles.DivForEachData}></TextInput>
-        <Button title="Create" onPress={()=>CreateNewEvent()}/>
+        <Button title="Create Event" onPress={()=>CreateNewEvent()}/>
       </View>
           </View>)
 
@@ -442,7 +442,7 @@ function changeModifyDateEnd (selecteddate) {
       return(<>
       <View style={styles.DivShowEvent}>
         {DisplayPopup()}
-       <Button title="POPUP" onPress={()=> setPopupdisplay(true)} style={styles.SetTextButton}/>
+       <Button title="Create Event" onPress={()=> setPopupdisplay(true)} style={styles.SetTextButton}/>
       {displayCalendarEvent()}
     </View>
     </>
@@ -464,7 +464,7 @@ function changeModifyDateEnd (selecteddate) {
         <>
     <ScrollView contentContainerStyle={{flexGrow:1}}>
   <StatusBar hidden/>
-    <ImageBackground source={require('../background.jpg')} style={styles.background}>
+    <ImageBackground source={require('../bluebg.jpeg')} style={styles.background}>
     <View style = {styles.backgroundDivDate}>
       {/* <Text>{text}</Text> */}
       <View>
@@ -473,7 +473,7 @@ function changeModifyDateEnd (selecteddate) {
       {show && (
         <DateTimePicker testID="dateTimePicker" value={date} mode={mode} is24Hour={true} display="default"  onChange={onChange}/>
       )}
-      {button_getdata()}
+      {/* {button_getdata()} */}
     </View>
     {display_other_node()}
     <Button title="butt"/>
@@ -490,7 +490,6 @@ function changeModifyDateEnd (selecteddate) {
 
   const styles = StyleSheet.create({
     popupbackground:{
-      backgroundColor: 'rgba(0, 0, 0, 0.6)',
       justifyContent: "center",
       alignItems: "center",
       width:'100%',
